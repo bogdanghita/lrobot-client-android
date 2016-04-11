@@ -189,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
 			@Override
 			public void onFinish() {
+				// TODO: this is also called in listenResultReady
 				stopListening();
 			}
 		}.start();
@@ -201,8 +202,10 @@ public class MainActivity extends AppCompatActivity {
 		Log.d(Constants.TAG_TSS, "stopListening");
 	}
 
+	// TODO: rename this (something with notify) and make it a listener
 	private void listenResultReady(ArrayList<String> results) {
 
+		// TODO: this is also called in onFinish
 		stopListening();
 
 		questionView.setText(getString(R.string.question) + " " + results.get(0));
