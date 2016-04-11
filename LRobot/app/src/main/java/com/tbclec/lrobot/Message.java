@@ -2,8 +2,6 @@ package com.tbclec.lrobot;
 
 import com.google.gson.annotations.Expose;
 
-import java.util.List;
-
 /**
  * Created by Bogdan on 11/04/2016.
  */
