@@ -1,6 +1,10 @@
 package com.tbclec.lrobot;
 
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -28,9 +32,9 @@ public class OliviaService {
 		httpService = retrofit.create(HttpService.class);
 	}
 
-	public void askQuestion(String question) {
+	public void askQuestion(List<String> question) {
 
-		QuestionParser.ParserResponse response = QuestionParser.isGoogleQuestion(question);
+		QuestionParser.ParserResponse response = QuestionParser.isGoogleQuestion(question.get(0));
 
 		if (response.isGoogleQuestion) {
 			askGoogleQuestion(response.GoogleQuestion);
@@ -42,7 +46,7 @@ public class OliviaService {
 		}
 	}
 
-	private void askBasicQuestion(String question) {
+	private void askBasicQuestion(List<String> question) {
 
 		httpService.getBasicQuestion(question, new Callback<Message.BasicResponse>() {
 			@Override

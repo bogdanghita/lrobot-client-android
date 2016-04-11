@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
 
 		questionView.setText(getString(R.string.question) + " " + results.get(0));
 
-		oliviaService.askQuestion(results.get(0));
+		oliviaService.askQuestion(results);
 	}
 
 // -------------------------------------------------------------------------------------------------

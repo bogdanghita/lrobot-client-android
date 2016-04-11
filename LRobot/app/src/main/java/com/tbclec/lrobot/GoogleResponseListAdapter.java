@@ -1,11 +1,16 @@
 package com.tbclec.lrobot;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Paint;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,11 +35,14 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 		}
 	}
 
+	private Context context;
 	private LayoutInflater inflater;
 
 	private LinkedList<Message.GoogleResponse> items;
 
 	public GoogleResponseListAdapter(Context context) {
+
+		this.context = context;
 
 		inflater = LayoutInflater.from(context);
 
@@ -55,7 +63,19 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 
 		holder.title.setText(items.get(position).title);
 		holder.description.setText(items.get(position).description);
-		holder.link.setText(items.get(position).link);
+
+		TextView linkTextView = holder.link;
+
+		final String link = items.get(position).link;
+		linkTextView.setText(link);
+		linkTextView.setPaintFlags(linkTextView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+		linkTextView.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				openLink(link);
+			}
+		});
 	}
 
 	@Override
@@ -63,10 +83,22 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 		return items.size();
 	}
 
-	// Update dataset
 	public void setItems(List<Message.GoogleResponse> items) {
 
 		this.items.clear();
 		this.items.addAll(items);
+	}
+
+	private void openLink(String link) {
+
+		try {
+			Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+			context.startActivity(myIntent);
+		}
+		catch (ActivityNotFoundException e) {
+			Toast.makeText(context, "No application can handle this request. " +
+					"Please install a web browser", Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
 	}
 }
