@@ -7,6 +7,7 @@ public class Constants {
 
 	public static final String TAG_TSS = "TTS-";
 	public static final String TAG_OLIVIA = "OLIV-";
+	public static final String TAG_SONG = "SONG-";
 
 	public static final int RC_INSTALL_TTS_DATA = 2001;
 

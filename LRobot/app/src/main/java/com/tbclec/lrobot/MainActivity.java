@@ -306,16 +306,57 @@ public class MainActivity extends AppCompatActivity {
 			});
 		}
 
+		// TODO: this should not be here. Same story fo openLink() which is currently in GoogleResponseListAdapter
+		// TODO: put them together somewhere in a separate class
 		@Override
 		public void notifyPlaySongRequest(List<String> song) {
 
-			AssetFileDescriptor descriptor;
+			String[] files;
 			try {
-				descriptor = getAssets().openFd("songs/moonwalk.mp3");
+				files = getAssets().list("songs");
 			}
 			catch (IOException e) {
 				e.printStackTrace();
-				// TODO: ..
+				Log.d(Constants.TAG_SONG, "Error opening assets/songs: ");
+				return;
+			}
+
+			for (String s : song) {
+
+				String file = searchSong(s, files);
+
+				if (file != null) {
+					playSong(file);
+					Log.d(Constants.TAG_SONG, "Song found: " + file);
+					return;
+				}
+			}
+
+			Log.d(Constants.TAG_SONG, "Song not found.");
+			// TODO: start youtube
+		}
+
+		private String searchSong(String song, String[] files) {
+
+			String songToLower = song.toLowerCase();
+
+			for (String file : files) {
+				if (file.toLowerCase().startsWith(songToLower)) {
+					return file;
+				}
+			}
+			return null;
+		}
+
+		private void playSong(String file) {
+
+			AssetFileDescriptor descriptor;
+			try {
+				descriptor = getAssets().openFd("songs/" + file);
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				Log.d(Constants.TAG_SONG, "Error opening assets/songs/" + file);
 				return;
 			}
 
@@ -330,13 +371,20 @@ public class MainActivity extends AppCompatActivity {
 			}
 			catch (IOException e) {
 				e.printStackTrace();
-				// TODO: ..
+				Log.d(Constants.TAG_SONG, "Unable to play song");
 				return;
 			}
 
 			player.setVolume(1.0f, 1.0f);
 
 			player.start();
+
+			try {
+				descriptor.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	};
 }
