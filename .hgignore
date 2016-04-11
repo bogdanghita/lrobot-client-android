@@ -1,0 +1,24 @@
+syntax: glob
+
+LRobot/.gradle/**
+LRobot/.idea/**
+
+LRobot/app/build/**
+LRobot/app/src/androidTest/**
+LRobot/app/src/debug/**
+LRobot/app/src/release/**
+LRobot/app/src/test/**
+LRobot/app/app.iml
+LRobot/app/google-services.json
+LRobot/app/proguard-rules.pro
+
+LRobot/build/**
+LRobot/gradle/**
+
+LRobot/build.gradle
+LRobot/gradle.properties
+LRobot/gradlew
+LRobot/gradlew.bat
+LRobot/local.properties
+LRobot/settings.gradle
+LRobot/LRobot.iml
