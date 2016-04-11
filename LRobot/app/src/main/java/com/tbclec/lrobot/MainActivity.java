@@ -8,12 +8,15 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
 	private OliviaService oliviaService;
 
+	private GoogleResponseListAdapter googleResponseListAdapter;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -34,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
 		questionView = (TextView) findViewById(R.id.question_view);
 		answerView = (TextView) findViewById(R.id.answer_view);
 		askButton = (Button) findViewById(R.id.ask_button);
+
+		initRecyclerView();
 
 		oliviaService = new OliviaService(oliviaResponseCallbackClient);
 	}
@@ -108,6 +115,21 @@ public class MainActivity extends AppCompatActivity {
 			speechRecognizer.destroy();
 			speechRecognizer = null;
 		}
+	}
+
+// -------------------------------------------------------------------------------------------------
+// GUI
+// -------------------------------------------------------------------------------------------------
+
+	private void initRecyclerView() {
+
+		RecyclerView recyclerView = (RecyclerView) findViewById(R.id.google_response_holder);
+
+		LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+		recyclerView.setLayoutManager(layoutManager);
+
+		googleResponseListAdapter = new GoogleResponseListAdapter(this);
+		recyclerView.setAdapter(googleResponseListAdapter);
 	}
 
 // -------------------------------------------------------------------------------------------------
@@ -248,12 +270,24 @@ public class MainActivity extends AppCompatActivity {
 
 	private OliviaResponseCallbackClient oliviaResponseCallbackClient = new OliviaResponseCallbackClient() {
 		@Override
-		public void notifyAnswerReceived(final String answer) {
+		public void notifyBasicAnswerReceived(final String answer) {
 
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					speak(answer);
+				}
+			});
+		}
+
+		@Override
+		public void notifyGoogleAnswerReceived(final List<Message.GoogleResponse> answer) {
+
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					googleResponseListAdapter.setItems(answer);
+					googleResponseListAdapter.notifyDataSetChanged();
 				}
 			});
 		}
