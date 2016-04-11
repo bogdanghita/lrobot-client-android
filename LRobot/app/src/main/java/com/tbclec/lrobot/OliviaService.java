@@ -1,11 +1,10 @@
 package com.tbclec.lrobot;
 
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
-import android.net.Uri;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.util.Log;
-import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.List;
 
 import retrofit.Callback;
@@ -34,11 +33,15 @@ public class OliviaService {
 
 	public void askQuestion(List<String> question) {
 
-		QuestionParser.ParserResponse response = QuestionParser.isGoogleQuestion(question.get(0));
+		QuestionParser.ParserResponse response = QuestionParser.parseQuestion(question);
 
-		if (response.isGoogleQuestion) {
-			askGoogleQuestion(response.GoogleQuestion);
-			Log.d(Constants.TAG_OLIVIA, "Google question asked: " + response.GoogleQuestion);
+		if (response.requestType == QuestionParser.RequestType.REQ_GOOGLE) {
+			askGoogleQuestion(response.content.get(0));
+			Log.d(Constants.TAG_OLIVIA, "Google question asked: " + response.content);
+		}
+		else if (response.requestType == QuestionParser.RequestType.REQ_SONG) {
+			callbackClient.notifyPlaySongRequest(response.content);
+			Log.d(Constants.TAG_OLIVIA, "Play song asked: " + response.content);
 		}
 		else {
 			askBasicQuestion(question);

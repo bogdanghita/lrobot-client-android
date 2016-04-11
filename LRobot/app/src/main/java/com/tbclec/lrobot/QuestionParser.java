@@ -1,47 +1,71 @@
 package com.tbclec.lrobot;
 
-import android.util.Log;
-
-import java.util.regex.Pattern;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by Bogdan on 11/04/2016.
  */
 public class QuestionParser {
 
+	public enum RequestType {REQ_BASIC, REQ_GOOGLE, REQ_SONG}
+
 	public static class ParserResponse {
 
-		public boolean isGoogleQuestion;
-		public String GoogleQuestion;
+		public RequestType requestType;
+		public List<String> content;
 
 		public ParserResponse() {
 		}
 
-		public ParserResponse(boolean isGoogleQuestion, String googleQuestion) {
-			this.isGoogleQuestion = isGoogleQuestion;
-			GoogleQuestion = googleQuestion;
+		public ParserResponse(RequestType requestType, List<String> content) {
+			this.requestType = requestType;
+			this.content = content;
 		}
 	}
 
 	private final static String[] googleQuestionPatterns = {
-			"google", "Google",
-			"ask google", "Ask Google", "Ask google", "ask Google"};
+			"google",
+			"ask google"};
+	private final static String[] playSongPatterns = {
+			"play song",
+			"play a song",
+			"play me a song"};
 
-	public static ParserResponse isGoogleQuestion(String question) {
+	public static ParserResponse parseQuestion(List<String> question) {
 
-		ParserResponse response = new ParserResponse(false, "");
+		ParserResponse response = new ParserResponse();
+		response.content = new LinkedList<>();
 
-		for (String pattern : googleQuestionPatterns) {
-			if (question.startsWith(pattern)) {
+		if (parseQuestion(question, response, googleQuestionPatterns, RequestType.REQ_GOOGLE)) {
+			return response;
+		}
 
-				response.isGoogleQuestion = true;
-				response.GoogleQuestion = question.replaceFirst(Pattern.quote(pattern), "");
-				response.GoogleQuestion = response.GoogleQuestion.trim();
+		if (parseQuestion(question, response, playSongPatterns, RequestType.REQ_SONG)) {
+			return response;
+		}
 
-				break;
+		return new ParserResponse(RequestType.REQ_BASIC, null);
+	}
+
+	private static boolean parseQuestion(List<String> question, ParserResponse response,
+	                                     String[] patterns, RequestType type) {
+
+		for (String q : question) {
+			String questionLoweCase = q.toLowerCase();
+
+			for (String pattern : patterns) {
+				if (questionLoweCase.startsWith(pattern)) {
+
+					String content = q.substring(pattern.length());
+					content = content.trim();
+
+					response.requestType = type;
+					response.content.add(content);
+				}
 			}
 		}
 
-		return response;
+		return !response.content.isEmpty();
 	}
 }

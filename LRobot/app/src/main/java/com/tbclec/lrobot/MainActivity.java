@@ -1,6 +1,8 @@
 package com.tbclec.lrobot;
 
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -15,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -301,6 +304,39 @@ public class MainActivity extends AppCompatActivity {
 					speak(getString(R.string.request_failed));
 				}
 			});
+		}
+
+		@Override
+		public void notifyPlaySongRequest(List<String> song) {
+
+			AssetFileDescriptor descriptor;
+			try {
+				descriptor = getAssets().openFd("songs/moonwalk.mp3");
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				// TODO: ..
+				return;
+			}
+
+			MediaPlayer player = new MediaPlayer();
+
+			long start = descriptor.getStartOffset();
+			long end = descriptor.getLength();
+
+			try {
+				player.setDataSource(descriptor.getFileDescriptor(), start, end);
+				player.prepare();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				// TODO: ..
+				return;
+			}
+
+			player.setVolume(1.0f, 1.0f);
+
+			player.start();
 		}
 	};
 }
