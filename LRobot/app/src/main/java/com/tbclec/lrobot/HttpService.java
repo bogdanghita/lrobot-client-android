@@ -1,5 +1,7 @@
 package com.tbclec.lrobot;
 
+import java.util.List;
+
 import retrofit.Callback;
 import retrofit.http.Body;
 import retrofit.http.GET;
@@ -18,5 +20,5 @@ public interface HttpService {
 //	public void getBasicQuestion(@Query("question") String question, Callback<Message.BasicResponse> response);
 
 	@POST("/api/olivia/google")
-	public void postGoogleQuestion(@Body Message.GoogleQuestion question, Callback<Message.GoogleResponse> response);
+	public void postGoogleQuestion(@Body Message.GoogleQuestion question, Callback<List<Message.GoogleResponse>> response);
 }

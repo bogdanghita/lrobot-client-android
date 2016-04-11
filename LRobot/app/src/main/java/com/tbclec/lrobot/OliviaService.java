@@ -2,6 +2,8 @@ package com.tbclec.lrobot;
 
 import android.util.Log;
 
+import java.util.List;
+
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -28,17 +30,16 @@ public class OliviaService {
 
 	public void askQuestion(String question) {
 
-		if (isGoogleQuestion(question)) {
-			askGoogleQuestion(question);
+		QuestionParser.ParserResponse response = QuestionParser.isGoogleQuestion(question);
+
+		if (response.isGoogleQuestion) {
+			askGoogleQuestion(response.GoogleQuestion);
+			Log.d(Constants.TAG_OLIVIA, "Google question asked: " + response.GoogleQuestion);
 		}
 		else {
 			askBasicQuestion(question);
+			Log.d(Constants.TAG_OLIVIA, "Basic question asked: " + question);
 		}
-	}
-
-	private boolean isGoogleQuestion(String question) {
-
-		return false;
 	}
 
 	private void askBasicQuestion(String question) {
@@ -49,7 +50,7 @@ public class OliviaService {
 
 				Log.d(Constants.TAG_OLIVIA, "Basic request successful.");
 
-				callbackClient.notifyAnswerReceived(basicResponse.answer);
+				callbackClient.notifyBasicAnswerReceived(basicResponse.answer);
 			}
 
 			@Override
@@ -67,11 +68,14 @@ public class OliviaService {
 		Message.GoogleQuestion message = new Message.GoogleQuestion();
 		message.query = question;
 
-		httpService.postGoogleQuestion(message, new Callback<Message.GoogleResponse>() {
+		httpService.postGoogleQuestion(message, new Callback<List<Message.GoogleResponse>>() {
+
 			@Override
-			public void success(Message.GoogleResponse googleResponse, Response response) {
+			public void success(List<Message.GoogleResponse> googleResponses, Response response) {
 
 				Log.d(Constants.TAG_OLIVIA, "Google request successful.");
+
+				callbackClient.notifyGoogleAnswerReceived(googleResponses);
 			}
 
 			@Override
