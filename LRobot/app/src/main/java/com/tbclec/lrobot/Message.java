@@ -11,6 +11,8 @@ public class Message {
 
 		@Expose
 		public String answer;
+		@Expose
+		public String image;
 	}
 
 	public static class GoogleQuestion {

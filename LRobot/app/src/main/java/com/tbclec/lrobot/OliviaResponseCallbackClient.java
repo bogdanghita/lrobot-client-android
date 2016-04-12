@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface OliviaResponseCallbackClient {
 
-	void notifyBasicAnswerReceived(String answer);
+	void notifyBasicAnswerReceived(String answer,String image);
 
 	void notifyGoogleAnswerReceived(List<Message.GoogleResponse> answer);
 
