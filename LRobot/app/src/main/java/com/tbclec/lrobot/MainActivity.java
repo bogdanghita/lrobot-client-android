@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
 	private SpeechRecognizer speechRecognizer;
 
 	private OliviaService oliviaService;
+	private boolean activityRecreated;
+	private boolean initMessageSpoken;
 
 	private final Object speechSync = new Object();
 	private final Object voiceListeningSync = new Object();
@@ -49,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_main);
+
+		activityRecreated = savedInstanceState != null;
+		initMessageSpoken = false;
 
 		questionView = (TextView) findViewById(R.id.question_view);
 		answerView = (TextView) findViewById(R.id.answer_view);
@@ -259,6 +264,12 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	private void speakInitMessage() {
+
+		if (activityRecreated || initMessageSpoken) {
+			return;
+		}
+		initMessageSpoken = true;
+
 		String text = getString(R.string.tts_init_msg);
 		speak(text);
 	}
