@@ -39,7 +39,7 @@ public class OliviaService {
 			Log.d(Constants.TAG_OLIVIA, "Google question asked: " + response.content);
 		}
 		else if (response.requestType == QuestionParser.RequestType.REQ_SONG) {
-			ServiceManager.getInstance().getSongService().playSong(response.content);
+			callbackClient.notifyPlaySongRequest(response.content);
 			Log.d(Constants.TAG_OLIVIA, "Play song asked: " + response.content);
 		}
 		else {

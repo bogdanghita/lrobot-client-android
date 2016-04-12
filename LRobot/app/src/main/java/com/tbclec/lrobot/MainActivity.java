@@ -86,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
 
 		clearTextToSpeech();
 		clearSpeechRecognizer();
+
+		ServiceManager.getInstance().getSongService().stopPlayingSong();
 	}
 
 	@Override
@@ -438,6 +440,12 @@ public class MainActivity extends AppCompatActivity {
 					speak(getString(R.string.request_failed_msg));
 				}
 			});
+		}
+
+		@Override
+		public void notifyPlaySongRequest(List<String> song) {
+			hideStatusView();
+			ServiceManager.getInstance().getSongService().playSong(song);
 		}
 	};
 }

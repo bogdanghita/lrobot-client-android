@@ -17,7 +17,7 @@ public class SongService {
 	private MediaPlayer player;
 
 	public SongService() {
-		
+
 		player = new MediaPlayer();
 		player.setVolume(1.0f, 1.0f);
 	}
