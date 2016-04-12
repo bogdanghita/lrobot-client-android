@@ -56,7 +56,7 @@ public class OliviaService {
 
 				Log.d(Constants.TAG_OLIVIA, "Basic request successful.");
 
-				callbackClient.notifyBasicAnswerReceived(basicResponse.answer);
+				callbackClient.notifyBasicAnswerReceived(basicResponse.answer,basicResponse.image);
 			}
 
 			@Override

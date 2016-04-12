@@ -1,25 +1,38 @@
 package com.tbclec.lrobot;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
 	private final Object speechSync = new Object();
 	private final Object voiceListeningSync = new Object();
 	private boolean voiceListeningStopped = true;
+
+	private enum MicState{ DISABLED,ON,RECORDING}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
 		serviceManager.setContext(this);
 		oliviaService = serviceManager.getOliviaService();
 		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
+
+		setMicStatus(MicState.DISABLED);
+
+		setOliviaImage(getString(R.string.olivia_intro_image));
 	}
 
 	@Override
@@ -103,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
 					}
 					else {
 						speakInitMessage();
+						setMicStatus(MicState.ON);
 					}
 				}
 				else {
@@ -160,6 +181,39 @@ public class MainActivity extends AppCompatActivity {
 		askButton.setEnabled(false);
 	}
 
+	private void setMicStatus(MicState micState){
+		ImageView iv = (ImageView)findViewById(R.id.ask_button);
+		switch (micState){
+			case DISABLED:
+				iv.setColorFilter(Color.GRAY);
+				break;
+			case ON:
+				iv.setColorFilter(Color.BLACK);
+				break;
+
+			case RECORDING:
+				iv.setColorFilter(Color.RED);
+				break;
+			default:
+				iv.setColorFilter(Color.BLACK);
+		}
+	}
+
+	private void setOliviaImage(String image){
+		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
+
+		if(image == null){
+			image = getString(R.string.olivia_default_image);
+		}
+
+		Picasso.with(this)
+				.load("file:///android_asset/faces/" + image)
+				.transform(new CropCircleTransformation())
+				.into(imageView);
+	}
+
+
+
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
 // -------------------------------------------------------------------------------------------------
@@ -171,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
 
 			if (resultCode == RESULT_OK) {
 				speakInitMessage();
+				setMicStatus(MicState.ON);
 			}
 			else {
 				Log.d(Constants.TAG_TSS, "TTS ERROR - result code: " + resultCode);
@@ -189,7 +244,6 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void speak(String text) {
-
 		synchronized (speechSync) {
 			textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 			answerView.setText(getString(R.string.answer) + " " + text);
@@ -235,6 +289,7 @@ public class MainActivity extends AppCompatActivity {
 					stopVoiceListening();
 				}
 			}.start();
+			setMicStatus(MicState.RECORDING);
 		}
 	}
 
@@ -250,6 +305,7 @@ public class MainActivity extends AppCompatActivity {
 			speechRecognizer.stopListening();
 			enableSpeakButton();
 			Log.d(Constants.TAG_TSS, "stopVoiceListening");
+			setMicStatus(MicState.ON);
 		}
 	}
 
@@ -267,7 +323,6 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	public void buttonAsk(View v) {
-
 		stopSpeech();
 		ServiceManager.getInstance().getSongService().stopPlayingSong();
 
@@ -328,11 +383,12 @@ public class MainActivity extends AppCompatActivity {
 
 	private OliviaResponseCallbackClient oliviaResponseCallbackClient = new OliviaResponseCallbackClient() {
 		@Override
-		public void notifyBasicAnswerReceived(final String answer) {
+		public void notifyBasicAnswerReceived(final String answer,final String image) {
 
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
+					setOliviaImage(image);
 					speak(answer);
 				}
 			});
@@ -340,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public void notifyGoogleAnswerReceived(final List<Message.GoogleResponse> answer) {
-
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {

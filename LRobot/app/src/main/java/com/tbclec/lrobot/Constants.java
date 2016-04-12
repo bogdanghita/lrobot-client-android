@@ -11,5 +11,5 @@ public class Constants {
 
 	public static final int RC_INSTALL_TTS_DATA = 2001;
 
-	public static final String SERVER_ADDRESS = "http://46.101.223.73:3000";
+	public static final String SERVER_ADDRESS = "http://192.168.1.114:3000";
 }
