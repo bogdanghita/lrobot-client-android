@@ -331,12 +331,11 @@ public class MainActivity extends AppCompatActivity {
 	private void notifyVoiceListeningResultReady(ArrayList<String> results) {
 
 		stopVoiceListening();
+		showStatusView();
 
 		questionView.setText(getString(R.string.question) + " " + results.get(0));
 
 		oliviaService.askQuestion(results);
-
-		showStatusView();
 	}
 
 // -------------------------------------------------------------------------------------------------
