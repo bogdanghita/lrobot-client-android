@@ -1,11 +1,16 @@
 package com.tbclec.lrobot;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +20,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -57,7 +63,9 @@ public class MainActivity extends AppCompatActivity {
 		serviceManager.setContext(this);
 		oliviaService = serviceManager.getOliviaService();
 		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
-		
+
+		setMicStatus(MicState.DISABLED);
+
 		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
 		Picasso.with(this)
 				.load("file:///android_asset/faces/intro.png")
@@ -106,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
 					}
 					else {
 						speakInitMessage();
+						setMicStatus(MicState.ON);
 					}
 				}
 				else {
@@ -163,6 +172,26 @@ public class MainActivity extends AppCompatActivity {
 		askButton.setEnabled(false);
 	}
 
+	private enum MicState{ DISABLED,ON,RECORDING}
+	private void setMicStatus(MicState micState){
+		ImageView iv = (ImageView)findViewById(R.id.ask_button);
+		switch (micState){
+			case DISABLED:
+				iv.setColorFilter(Color.GRAY);
+				break;
+			case ON:
+				iv.setColorFilter(Color.BLACK);
+				break;
+
+			case RECORDING:
+				iv.setColorFilter(Color.RED);
+				break;
+			default:
+				iv.setColorFilter(Color.BLACK);
+
+		}
+	}
+
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
 // -------------------------------------------------------------------------------------------------
@@ -174,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
 			if (resultCode == RESULT_OK) {
 				speakInitMessage();
+				setMicStatus(MicState.ON);
 			}
 			else {
 				Log.d(Constants.TAG_TSS, "TTS ERROR - result code: " + resultCode);
@@ -192,7 +222,6 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void speak(String text) {
-
 		synchronized (speechSync) {
 			textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 			answerView.setText(getString(R.string.answer) + " " + text);
@@ -238,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
 					stopVoiceListening();
 				}
 			}.start();
+			setMicStatus(MicState.RECORDING);
 		}
 	}
 
@@ -253,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
 			speechRecognizer.stopListening();
 			enableSpeakButton();
 			Log.d(Constants.TAG_TSS, "stopVoiceListening");
+			setMicStatus(MicState.ON);
 		}
 	}
 
@@ -270,7 +301,6 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	public void buttonAsk(View v) {
-
 		stopSpeech();
 		ServiceManager.getInstance().getSongService().stopPlayingSong();
 
