@@ -14,8 +14,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +30,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
 	private TextView questionView, answerView;
-	private Button askButton;
+	private ImageView askButton;
 
 	private TextToSpeech tts;
 	private SpeechRecognizer speechRecognizer;
@@ -37,15 +42,22 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.activity_main);
 
 		questionView = (TextView) findViewById(R.id.question_view);
 		answerView = (TextView) findViewById(R.id.answer_view);
-		askButton = (Button) findViewById(R.id.ask_button);
+		askButton = (ImageView) findViewById(R.id.ask_button);
 
 		initRecyclerView();
 
 		oliviaService = new OliviaService(oliviaResponseCallbackClient);
+
+
+		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
+		Picasso.with(this)
+				.load("file:///android_asset/faces/intro.png")
+				.into(imageView);
 	}
 
 	@Override
