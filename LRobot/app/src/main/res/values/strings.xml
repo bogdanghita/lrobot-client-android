@@ -6,8 +6,12 @@
 
 	<string name="ask">Ask question</string>
 
-	<string name="tts_init">Text to speech: initialized.</string>
-	<string name="request_failed">Request failed.</string>
+	<string name="tts_init_msg">Hey there! I\'m Olivia!</string>
+	<string name="request_failed_msg">I\'m sorry, I don\'t feel so good. Just give me a minute.</string>
+	<string name="google_result_msg">Here are the Google results</string>
+
+	<string name="google_response_title">Here are the Google results</string>
+	<string name="status_thinking">Thinking...</string>
 
 	<string name="olivia_intro_image">olivia_intro.png</string>
 	<string name="olivia_default_image">olivia_intro.png</string>

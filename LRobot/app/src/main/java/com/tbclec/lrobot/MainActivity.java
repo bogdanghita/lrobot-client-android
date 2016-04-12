@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
 	private TextToSpeech textToSpeech;
 	private SpeechRecognizer speechRecognizer;
 
-	private ServiceManager serviceManager;
 	private OliviaService oliviaService;
 
 	private final Object speechSync = new Object();
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
 		initRecyclerView();
 
-		serviceManager = ServiceManager.getInstance();
+		ServiceManager serviceManager = ServiceManager.getInstance();
 		serviceManager.setContext(this);
 		oliviaService = serviceManager.getOliviaService();
 		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
@@ -223,6 +222,16 @@ public class MainActivity extends AppCompatActivity {
 		googleResultsLayout.setVisibility(View.GONE);
 	}
 
+	private void showStatusView() {
+		findViewById(R.id.status_view).setVisibility(View.VISIBLE);
+		findViewById(R.id.ask_button).setVisibility(View.GONE);
+	}
+
+	private void hideStatusView() {
+		findViewById(R.id.status_view).setVisibility(View.GONE);
+		findViewById(R.id.ask_button).setVisibility(View.VISIBLE);
+	}
+
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
 // -------------------------------------------------------------------------------------------------
@@ -247,8 +256,7 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	private void speakInitMessage() {
-
-		String text = getString(R.string.tts_init);
+		String text = getString(R.string.tts_init_msg);
 		speak(text);
 	}
 
@@ -325,6 +333,8 @@ public class MainActivity extends AppCompatActivity {
 		questionView.setText(getString(R.string.question) + " " + results.get(0));
 
 		oliviaService.askQuestion(results);
+
+		showStatusView();
 	}
 
 // -------------------------------------------------------------------------------------------------
@@ -398,6 +408,7 @@ public class MainActivity extends AppCompatActivity {
 				@Override
 				public void run() {
 					setOliviaImage(image);
+					hideStatusView();
 					speak(answer);
 				}
 			});
@@ -411,6 +422,8 @@ public class MainActivity extends AppCompatActivity {
 					googleResponseListAdapter.setItems(answer);
 					googleResponseListAdapter.notifyDataSetChanged();
 					showGoogleResponseLayout();
+					hideStatusView();
+					speak(getString(R.string.google_result_msg));
 				}
 			});
 		}
@@ -421,7 +434,8 @@ public class MainActivity extends AppCompatActivity {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					speak(getString(R.string.request_failed));
+					hideStatusView();
+					speak(getString(R.string.request_failed_msg));
 				}
 			});
 		}
