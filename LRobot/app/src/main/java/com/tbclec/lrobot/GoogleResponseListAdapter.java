@@ -1,16 +1,12 @@
 package com.tbclec.lrobot;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Paint;
-import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,14 +31,11 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 		}
 	}
 
-	private Context context;
 	private LayoutInflater inflater;
 
 	private LinkedList<Message.GoogleResponse> items;
 
 	public GoogleResponseListAdapter(Context context) {
-
-		this.context = context;
 
 		inflater = LayoutInflater.from(context);
 
@@ -52,7 +45,6 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-		// Create a new view
 		View v = inflater.inflate(R.layout.google_response_item, parent, false);
 
 		return new ViewHolder(v);
@@ -73,13 +65,14 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 		linkTextView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				openLink(link);
+				ServiceManager.getInstance().getExternalIntentService().openLink(link);
 			}
 		});
 	}
 
 	@Override
 	public int getItemCount() {
+
 		return items.size();
 	}
 
@@ -87,18 +80,5 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 
 		this.items.clear();
 		this.items.addAll(items);
-	}
-
-	private void openLink(String link) {
-
-		try {
-			Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-			context.startActivity(myIntent);
-		}
-		catch (ActivityNotFoundException e) {
-			Toast.makeText(context, "No application can handle this request. " +
-					"Please install a web browser", Toast.LENGTH_LONG).show();
-			e.printStackTrace();
-		}
 	}
 }

@@ -1,8 +1,6 @@
 package com.tbclec.lrobot;
 
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
-import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -22,7 +20,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -32,12 +29,17 @@ public class MainActivity extends AppCompatActivity {
 	private TextView questionView, answerView;
 	private ImageView askButton;
 
-	private TextToSpeech tts;
+	private GoogleResponseListAdapter googleResponseListAdapter;
+
+	private TextToSpeech textToSpeech;
 	private SpeechRecognizer speechRecognizer;
 
+	private ServiceManager serviceManager;
 	private OliviaService oliviaService;
 
-	private GoogleResponseListAdapter googleResponseListAdapter;
+	private final Object speechSync = new Object();
+	private final Object voiceListeningSync = new Object();
+	private boolean voiceListeningStopped = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +53,11 @@ public class MainActivity extends AppCompatActivity {
 
 		initRecyclerView();
 
-		oliviaService = new OliviaService(oliviaResponseCallbackClient);
-
-
+		serviceManager = ServiceManager.getInstance();
+		serviceManager.setContext(this);
+		oliviaService = serviceManager.getOliviaService();
+		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
+		
 		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
 		Picasso.with(this)
 				.load("file:///android_asset/faces/intro.png")
@@ -76,9 +80,13 @@ public class MainActivity extends AppCompatActivity {
 		clearSpeechRecognizer();
 	}
 
+// -------------------------------------------------------------------------------------------------
+// SPEECH & VOICE INIT & CLEANUP
+// -------------------------------------------------------------------------------------------------
+
 	private void initTextToSpeech() {
 
-		tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+		textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
 			@Override
 			public void onInit(int status) {
 
@@ -86,8 +94,8 @@ public class MainActivity extends AppCompatActivity {
 
 					Log.d(Constants.TAG_TSS, "TTS GOOD - status code: " + status);
 
-					int result = tts.setLanguage(Locale.UK);
-					tts.setPitch(0.7F);
+					int result = textToSpeech.setLanguage(Locale.UK);
+					textToSpeech.setPitch(0.7F);
 
 					if (result == TextToSpeech.LANG_MISSING_DATA) {
 						Log.e(Constants.TAG_TSS, "LANG_MISSING_DATA");
@@ -109,10 +117,10 @@ public class MainActivity extends AppCompatActivity {
 
 	private void clearTextToSpeech() {
 
-		if (tts != null) {
-			tts.stop();
-			tts.shutdown();
-			tts = null;
+		if (textToSpeech != null) {
+			textToSpeech.stop();
+			textToSpeech.shutdown();
+			textToSpeech = null;
 		}
 	}
 
@@ -147,6 +155,14 @@ public class MainActivity extends AppCompatActivity {
 		recyclerView.setAdapter(googleResponseListAdapter);
 	}
 
+	private void enableSpeakButton() {
+		askButton.setEnabled(true);
+	}
+
+	private void disableSpeakButton() {
+		askButton.setEnabled(false);
+	}
+
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
 // -------------------------------------------------------------------------------------------------
@@ -170,55 +186,79 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	private void speakInitMessage() {
+
 		String text = getString(R.string.tts_init);
 		speak(text);
 	}
 
 	private void speak(String text) {
-		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-		answerView.setText(getString(R.string.answer) + " " + text);
+
+		synchronized (speechSync) {
+			textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+			answerView.setText(getString(R.string.answer) + " " + text);
+		}
+	}
+
+	private void stopSpeech() {
+
+		synchronized (speechSync) {
+			if (textToSpeech.isSpeaking()) {
+				textToSpeech.stop();
+				Log.d(Constants.TAG_TSS, "textToSpeech.stop()");
+			}
+		}
 	}
 
 // -------------------------------------------------------------------------------------------------
 // SPEECH RECOGNIZER ACTIONS
 // -------------------------------------------------------------------------------------------------
 
-	private void startListening() {
+	private void startVoiceListening() {
 
-		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+		synchronized (voiceListeningSync) {
 
-		speechRecognizer.startListening(intent);
-		Log.d(Constants.TAG_TSS, "startListening");
+			voiceListeningStopped = false;
 
-		new CountDownTimer(5000, 1000) {
+			Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+			intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+			intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
 
-			@Override
-			public void onTick(long millisUntilFinished) {
-				//do nothing, just let it tick
-			}
+			speechRecognizer.startListening(intent);
+			Log.d(Constants.TAG_TSS, "startVoiceListening");
 
-			@Override
-			public void onFinish() {
-				// TODO: this is also called in listenResultReady
-				stopListening();
-			}
-		}.start();
+			new CountDownTimer(5000, 1000) {
+
+				@Override
+				public void onTick(long millisUntilFinished) {
+					//do nothing, just let it tick
+				}
+
+				@Override
+				public void onFinish() {
+					stopVoiceListening();
+				}
+			}.start();
+		}
 	}
 
-	private void stopListening() {
+	private void stopVoiceListening() {
 
-		speechRecognizer.stopListening();
-		askButton.setEnabled(true);
-		Log.d(Constants.TAG_TSS, "stopListening");
+		synchronized (voiceListeningSync) {
+
+			if (voiceListeningStopped) {
+				return;
+			}
+			voiceListeningStopped = true;
+
+			speechRecognizer.stopListening();
+			enableSpeakButton();
+			Log.d(Constants.TAG_TSS, "stopVoiceListening");
+		}
 	}
 
-	// TODO: rename this (something with notify) and make it a listener
-	private void listenResultReady(ArrayList<String> results) {
+	private void notifyVoiceListeningResultReady(ArrayList<String> results) {
 
-		// TODO: this is also called in onFinish
-		stopListening();
+		stopVoiceListening();
 
 		questionView.setText(getString(R.string.question) + " " + results.get(0));
 
@@ -231,7 +271,10 @@ public class MainActivity extends AppCompatActivity {
 
 	public void buttonAsk(View v) {
 
-		startListening();
+		stopSpeech();
+		ServiceManager.getInstance().getSongService().stopPlayingSong();
+
+		startVoiceListening();
 	}
 
 	private RecognitionListener recognitionListener = new RecognitionListener() {
@@ -243,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public void onBufferReceived(byte[] buffer) {
-			Log.d("Speech", "onBufferReceived");
+//			Log.d("Speech", "onBufferReceived");
 		}
 
 		@Override
@@ -269,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
 		@Override
 		public void onReadyForSpeech(Bundle params) {
 			Log.d("Speech", "onReadyForSpeech");
-			askButton.setEnabled(false);
+			disableSpeakButton();
 		}
 
 		@Override
@@ -277,12 +320,12 @@ public class MainActivity extends AppCompatActivity {
 			Log.d("Speech", "onResults");
 
 			ArrayList<String> resultsArray = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-			listenResultReady(resultsArray);
+			notifyVoiceListeningResultReady(resultsArray);
 		}
 
 		@Override
 		public void onRmsChanged(float rmsdB) {
-			Log.d("Speech", "onRmsChanged");
+//			Log.d("Speech", "onRmsChanged");
 		}
 	};
 
@@ -319,87 +362,6 @@ public class MainActivity extends AppCompatActivity {
 					speak(getString(R.string.request_failed));
 				}
 			});
-		}
-
-		// TODO: this should not be here. Same story fo openLink() which is currently in GoogleResponseListAdapter
-		// TODO: put them together somewhere in a separate class
-		@Override
-		public void notifyPlaySongRequest(List<String> song) {
-
-			String[] files;
-			try {
-				files = getAssets().list("songs");
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Log.d(Constants.TAG_SONG, "Error opening assets/songs: ");
-				return;
-			}
-
-			for (String s : song) {
-
-				String file = searchSong(s, files);
-
-				if (file != null) {
-					playSong(file);
-					Log.d(Constants.TAG_SONG, "Song found: " + file);
-					return;
-				}
-			}
-
-			Log.d(Constants.TAG_SONG, "Song not found.");
-			// TODO: start youtube
-		}
-
-		private String searchSong(String song, String[] files) {
-
-			String songToLower = song.toLowerCase();
-
-			for (String file : files) {
-				if (file.toLowerCase().startsWith(songToLower)) {
-					return file;
-				}
-			}
-			return null;
-		}
-
-		private void playSong(String file) {
-
-			AssetFileDescriptor descriptor;
-			try {
-				descriptor = getAssets().openFd("songs/" + file);
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Log.d(Constants.TAG_SONG, "Error opening assets/songs/" + file);
-				return;
-			}
-
-			MediaPlayer player = new MediaPlayer();
-
-			long start = descriptor.getStartOffset();
-			long end = descriptor.getLength();
-
-			try {
-				player.setDataSource(descriptor.getFileDescriptor(), start, end);
-				player.prepare();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Log.d(Constants.TAG_SONG, "Unable to play song");
-				return;
-			}
-
-			player.setVolume(1.0f, 1.0f);
-
-			player.start();
-
-			try {
-				descriptor.close();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	};
 }
