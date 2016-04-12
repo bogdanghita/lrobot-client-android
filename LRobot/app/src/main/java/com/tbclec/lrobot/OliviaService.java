@@ -56,7 +56,7 @@ public class OliviaService {
 
 				Log.d(Constants.TAG_OLIVIA, "Basic request successful.");
 
-				callbackClient.notifyBasicAnswerReceived(basicResponse.answer,basicResponse.image);
+				callbackClient.notifyBasicAnswerReceived(basicResponse.answer, basicResponse.image);
 			}
 
 			@Override
@@ -88,6 +88,8 @@ public class OliviaService {
 			public void failure(RetrofitError error) {
 
 				Log.d(Constants.TAG_OLIVIA, "Google request failed: " + error.toString());
+
+				callbackClient.notifyRequestFailed();
 			}
 		});
 	}
