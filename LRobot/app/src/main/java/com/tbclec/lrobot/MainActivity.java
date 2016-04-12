@@ -227,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
 	private void showStatusView() {
 		findViewById(R.id.status_view).setVisibility(View.VISIBLE);
 		findViewById(R.id.ask_button).setVisibility(View.GONE);
+		answerView.setText(getString(R.string.answer));
 	}
 
 	private void hideStatusView() {
