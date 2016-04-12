@@ -12,9 +12,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -51,17 +48,17 @@ public class MainActivity extends AppCompatActivity {
 		answerView = (TextView) findViewById(R.id.answer_view);
 		askButton = (ImageView) findViewById(R.id.ask_button);
 
+		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
+		Picasso.with(this)
+				.load("file:///android_asset/faces/intro.png")
+				.into(imageView);
+
 		initRecyclerView();
 
 		serviceManager = ServiceManager.getInstance();
 		serviceManager.setContext(this);
 		oliviaService = serviceManager.getOliviaService();
 		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
-		
-		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
-		Picasso.with(this)
-				.load("file:///android_asset/faces/intro.png")
-				.into(imageView);
 	}
 
 	@Override
