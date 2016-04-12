@@ -53,7 +53,7 @@
 	<ImageView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:src="@drawable/ic_action_name"
+		android:src="@drawable/ic_mic_black_24dp"
 		android:id="@+id/ask_button"
 		android:layout_centerHorizontal="true"
 		android:onClick="buttonAsk"
