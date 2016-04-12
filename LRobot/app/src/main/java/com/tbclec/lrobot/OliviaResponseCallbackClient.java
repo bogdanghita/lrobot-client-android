@@ -11,9 +11,11 @@ import java.util.List;
  */
 public interface OliviaResponseCallbackClient {
 
-	void notifyBasicAnswerReceived(String answer,String image);
+	void notifyBasicAnswerReceived(String answer, String image);
 
 	void notifyGoogleAnswerReceived(List<Message.GoogleResponse> answer);
 
 	void notifyRequestFailed();
+
+	void notifyPlaySongRequest(List<String> song);
 }
