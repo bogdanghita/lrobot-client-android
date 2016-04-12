@@ -1,8 +1,6 @@
 package com.tbclec.lrobot;
 
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
-import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -17,22 +15,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
 	private TextView questionView, answerView;
 	private Button askButton;
 
+	private GoogleResponseListAdapter googleResponseListAdapter;
+
 	private TextToSpeech tts;
 	private SpeechRecognizer speechRecognizer;
 
 	private OliviaService oliviaService;
 
-	private GoogleResponseListAdapter googleResponseListAdapter;
+	private final Object voiceListeningSync = new Object();
+	private boolean voiceListeningStopped = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
 		initRecyclerView();
 
-		oliviaService = new OliviaService(oliviaResponseCallbackClient);
+		oliviaService = new OliviaService(this, oliviaResponseCallbackClient);
 	}
 
 	@Override
@@ -171,42 +172,52 @@ public class MainActivity extends AppCompatActivity {
 // SPEECH RECOGNIZER ACTIONS
 // -------------------------------------------------------------------------------------------------
 
-	private void startListening() {
+	private void startVoiceListening() {
 
-		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+		synchronized (voiceListeningSync) {
 
-		speechRecognizer.startListening(intent);
-		Log.d(Constants.TAG_TSS, "startListening");
+			voiceListeningStopped = false;
 
-		new CountDownTimer(5000, 1000) {
+			Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+			intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+			intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
 
-			@Override
-			public void onTick(long millisUntilFinished) {
-				//do nothing, just let it tick
-			}
+			speechRecognizer.startListening(intent);
+			Log.d(Constants.TAG_TSS, "startVoiceListening");
 
-			@Override
-			public void onFinish() {
-				// TODO: this is also called in listenResultReady
-				stopListening();
-			}
-		}.start();
+			new CountDownTimer(5000, 1000) {
+
+				@Override
+				public void onTick(long millisUntilFinished) {
+					//do nothing, just let it tick
+				}
+
+				@Override
+				public void onFinish() {
+					stopVoiceListening();
+				}
+			}.start();
+		}
 	}
 
-	private void stopListening() {
+	private void stopVoiceListening() {
 
-		speechRecognizer.stopListening();
-		askButton.setEnabled(true);
-		Log.d(Constants.TAG_TSS, "stopListening");
+		synchronized (voiceListeningSync) {
+
+			if (voiceListeningStopped) {
+				return;
+			}
+			voiceListeningStopped = true;
+
+			speechRecognizer.stopListening();
+			askButton.setEnabled(true);
+			Log.d(Constants.TAG_TSS, "stopVoiceListening");
+		}
 	}
 
-	// TODO: rename this (something with notify) and make it a listener
-	private void listenResultReady(ArrayList<String> results) {
+	private void notifyVoiceListeningResultReady(ArrayList<String> results) {
 
-		// TODO: this is also called in onFinish
-		stopListening();
+		stopVoiceListening();
 
 		questionView.setText(getString(R.string.question) + " " + results.get(0));
 
@@ -219,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
 
 	public void buttonAsk(View v) {
 
-		startListening();
+		startVoiceListening();
 	}
 
 	private RecognitionListener recognitionListener = new RecognitionListener() {
@@ -231,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public void onBufferReceived(byte[] buffer) {
-			Log.d("Speech", "onBufferReceived");
+//			Log.d("Speech", "onBufferReceived");
 		}
 
 		@Override
@@ -265,12 +276,12 @@ public class MainActivity extends AppCompatActivity {
 			Log.d("Speech", "onResults");
 
 			ArrayList<String> resultsArray = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-			listenResultReady(resultsArray);
+			notifyVoiceListeningResultReady(resultsArray);
 		}
 
 		@Override
 		public void onRmsChanged(float rmsdB) {
-			Log.d("Speech", "onRmsChanged");
+//			Log.d("Speech", "onRmsChanged");
 		}
 	};
 
@@ -307,87 +318,6 @@ public class MainActivity extends AppCompatActivity {
 					speak(getString(R.string.request_failed));
 				}
 			});
-		}
-
-		// TODO: this should not be here. Same story fo openLink() which is currently in GoogleResponseListAdapter
-		// TODO: put them together somewhere in a separate class
-		@Override
-		public void notifyPlaySongRequest(List<String> song) {
-
-			String[] files;
-			try {
-				files = getAssets().list("songs");
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Log.d(Constants.TAG_SONG, "Error opening assets/songs: ");
-				return;
-			}
-
-			for (String s : song) {
-
-				String file = searchSong(s, files);
-
-				if (file != null) {
-					playSong(file);
-					Log.d(Constants.TAG_SONG, "Song found: " + file);
-					return;
-				}
-			}
-
-			Log.d(Constants.TAG_SONG, "Song not found.");
-			// TODO: start youtube
-		}
-
-		private String searchSong(String song, String[] files) {
-
-			String songToLower = song.toLowerCase();
-
-			for (String file : files) {
-				if (file.toLowerCase().startsWith(songToLower)) {
-					return file;
-				}
-			}
-			return null;
-		}
-
-		private void playSong(String file) {
-
-			AssetFileDescriptor descriptor;
-			try {
-				descriptor = getAssets().openFd("songs/" + file);
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Log.d(Constants.TAG_SONG, "Error opening assets/songs/" + file);
-				return;
-			}
-
-			MediaPlayer player = new MediaPlayer();
-
-			long start = descriptor.getStartOffset();
-			long end = descriptor.getLength();
-
-			try {
-				player.setDataSource(descriptor.getFileDescriptor(), start, end);
-				player.prepare();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Log.d(Constants.TAG_SONG, "Unable to play song");
-				return;
-			}
-
-			player.setVolume(1.0f, 1.0f);
-
-			player.start();
-
-			try {
-				descriptor.close();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	};
 }

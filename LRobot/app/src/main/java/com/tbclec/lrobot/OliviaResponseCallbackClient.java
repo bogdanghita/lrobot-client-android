@@ -16,6 +16,4 @@ public interface OliviaResponseCallbackClient {
 	void notifyGoogleAnswerReceived(List<Message.GoogleResponse> answer);
 
 	void notifyRequestFailed();
-
-	void notifyPlaySongRequest(List<String> song);
 }

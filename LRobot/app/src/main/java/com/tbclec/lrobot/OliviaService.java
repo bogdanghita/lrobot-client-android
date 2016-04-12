@@ -1,10 +1,8 @@
 package com.tbclec.lrobot;
 
-import android.content.res.AssetFileDescriptor;
-import android.media.MediaPlayer;
+import android.content.Context;
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.List;
 
 import retrofit.Callback;
@@ -19,8 +17,9 @@ public class OliviaService {
 
 	private OliviaResponseCallbackClient callbackClient;
 	private HttpService httpService;
+	private SongService songService;
 
-	public OliviaService(OliviaResponseCallbackClient callbackClient) {
+	public OliviaService(Context context, OliviaResponseCallbackClient callbackClient) {
 
 		this.callbackClient = callbackClient;
 
@@ -29,6 +28,7 @@ public class OliviaService {
 				.build();
 
 		httpService = retrofit.create(HttpService.class);
+		songService = new SongService(context);
 	}
 
 	public void askQuestion(List<String> question) {
@@ -40,7 +40,7 @@ public class OliviaService {
 			Log.d(Constants.TAG_OLIVIA, "Google question asked: " + response.content);
 		}
 		else if (response.requestType == QuestionParser.RequestType.REQ_SONG) {
-			callbackClient.notifyPlaySongRequest(response.content);
+			songService.playSong(response.content);
 			Log.d(Constants.TAG_OLIVIA, "Play song asked: " + response.content);
 		}
 		else {
