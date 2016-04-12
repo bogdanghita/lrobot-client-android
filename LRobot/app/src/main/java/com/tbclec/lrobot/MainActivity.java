@@ -1,32 +1,22 @@
 package com.tbclec.lrobot;
 
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
-import android.graphics.BitmapShader;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +41,7 @@ public class MainActivity extends AppCompatActivity {
 	private final Object voiceListeningSync = new Object();
 	private boolean voiceListeningStopped = true;
 
-	private enum MicState{ DISABLED,ON,RECORDING}
-
+	private enum MicState {DISABLED, ON, RECORDING}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -181,9 +170,9 @@ public class MainActivity extends AppCompatActivity {
 		askButton.setEnabled(false);
 	}
 
-	private void setMicStatus(MicState micState){
-		ImageView iv = (ImageView)findViewById(R.id.ask_button);
-		switch (micState){
+	private void setMicStatus(MicState micState) {
+		ImageView iv = (ImageView) findViewById(R.id.ask_button);
+		switch (micState) {
 			case DISABLED:
 				iv.setColorFilter(Color.GRAY);
 				break;
@@ -199,10 +188,10 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	private void setOliviaImage(String image){
+	private void setOliviaImage(String image) {
 		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
 
-		if(image == null){
+		if (image == null) {
 			image = getString(R.string.olivia_default_image);
 		}
 
@@ -211,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
 				.transform(new CropCircleTransformation())
 				.into(imageView);
 	}
-
 
 
 // -------------------------------------------------------------------------------------------------
@@ -383,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private OliviaResponseCallbackClient oliviaResponseCallbackClient = new OliviaResponseCallbackClient() {
 		@Override
-		public void notifyBasicAnswerReceived(final String answer,final String image) {
+		public void notifyBasicAnswerReceived(final String answer, final String image) {
 
 			runOnUiThread(new Runnable() {
 				@Override
