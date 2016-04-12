@@ -9,7 +9,7 @@ import retrofit.http.POST;
 /**
  * Created by Bogdan on 11/04/2016.
  */
-public interface HttpService {
+public interface HttpAPI {
 
 	@POST("/api/olivia/")
 	public void getBasicQuestion(@Body List<String> question, Callback<Message.BasicResponse> response);

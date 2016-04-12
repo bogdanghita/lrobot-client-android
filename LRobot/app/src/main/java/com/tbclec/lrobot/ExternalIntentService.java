@@ -13,7 +13,7 @@ public class ExternalIntentService {
 
 	private Context context;
 
-	public ExternalIntentService(Context context) {
+	public void setContext(Context context) {
 		this.context = context;
 	}
 

@@ -35,15 +35,11 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 
 	private LinkedList<Message.GoogleResponse> items;
 
-	private ExternalIntentService externalIntentService;
-
 	public GoogleResponseListAdapter(Context context) {
 
 		inflater = LayoutInflater.from(context);
 
 		items = new LinkedList<>();
-
-		externalIntentService = new ExternalIntentService(context);
 	}
 
 	@Override
@@ -69,13 +65,14 @@ public class GoogleResponseListAdapter extends RecyclerView.Adapter<GoogleRespon
 		linkTextView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				externalIntentService.openLink(link);
+				ServiceManager.getInstance().getExternalIntentService().openLink(link);
 			}
 		});
 	}
 
 	@Override
 	public int getItemCount() {
+
 		return items.size();
 	}
 
