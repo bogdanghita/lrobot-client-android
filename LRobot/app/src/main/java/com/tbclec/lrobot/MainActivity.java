@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private TextView questionView, answerView;
 	private ImageView askButton;
+	private LinearLayout googleResultsLayout;
 
 	private GoogleResponseListAdapter googleResponseListAdapter;
 
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 		questionView = (TextView) findViewById(R.id.question_view);
 		answerView = (TextView) findViewById(R.id.answer_view);
 		askButton = (ImageView) findViewById(R.id.ask_button);
+		googleResultsLayout = (LinearLayout) findViewById(R.id.google_results_layout);
 
 		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
 		Picasso.with(this)
@@ -84,6 +87,17 @@ public class MainActivity extends AppCompatActivity {
 
 		clearTextToSpeech();
 		clearSpeechRecognizer();
+	}
+
+	@Override
+	public void onBackPressed() {
+
+		if (googleResultsLayout.getVisibility() == View.VISIBLE) {
+			hideGoogleResponseLayout();
+		}
+		else {
+			super.onBackPressed();
+		}
 	}
 
 // -------------------------------------------------------------------------------------------------
@@ -201,6 +215,13 @@ public class MainActivity extends AppCompatActivity {
 				.into(imageView);
 	}
 
+	private void showGoogleResponseLayout() {
+		googleResultsLayout.setVisibility(View.VISIBLE);
+	}
+
+	private void hideGoogleResponseLayout() {
+		googleResultsLayout.setVisibility(View.GONE);
+	}
 
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
@@ -389,6 +410,7 @@ public class MainActivity extends AppCompatActivity {
 				public void run() {
 					googleResponseListAdapter.setItems(answer);
 					googleResponseListAdapter.notifyDataSetChanged();
+					showGoogleResponseLayout();
 				}
 			});
 		}
