@@ -30,4 +30,6 @@ dependencies {
         exclude group: 'stax', module: 'stax-api'
         exclude group: 'stax', module: 'stax'
     }
+
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }

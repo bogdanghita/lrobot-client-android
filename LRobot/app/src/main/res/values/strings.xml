@@ -1,8 +1,8 @@
 <resources>
 	<string name="app_name">LRobot</string>
 
-	<string name="question">Q:</string>
-	<string name="answer">A:</string>
+	<string name="question">Me:</string>
+	<string name="answer">Olivia:</string>
 
 	<string name="ask">Ask question</string>
 
