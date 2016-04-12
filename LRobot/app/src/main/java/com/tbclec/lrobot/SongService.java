@@ -14,9 +14,15 @@ import java.util.List;
 public class SongService {
 
 	private Context context;
+	private MediaPlayer player;
 
-	public SongService(Context context) {
+	public SongService() {
 		
+		player = new MediaPlayer();
+		player.setVolume(1.0f, 1.0f);
+	}
+
+	public void setContext(Context context) {
 		this.context = context;
 	}
 
@@ -71,7 +77,21 @@ public class SongService {
 			return;
 		}
 
-		MediaPlayer player = new MediaPlayer();
+		playSong(descriptor);
+
+		try {
+			descriptor.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void playSong(AssetFileDescriptor descriptor) {
+
+		stopPlayingSong();
+
+//		player = new MediaPlayer();
 
 		long start = descriptor.getStartOffset();
 		long end = descriptor.getLength();
@@ -86,15 +106,10 @@ public class SongService {
 			return;
 		}
 
-		player.setVolume(1.0f, 1.0f);
-
 		player.start();
+	}
 
-		try {
-			descriptor.close();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void stopPlayingSong() {
+		player.stop();
 	}
 }

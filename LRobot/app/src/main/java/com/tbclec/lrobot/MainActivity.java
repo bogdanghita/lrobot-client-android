@@ -18,7 +18,6 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,11 +26,13 @@ public class MainActivity extends AppCompatActivity {
 
 	private GoogleResponseListAdapter googleResponseListAdapter;
 
-	private TextToSpeech tts;
+	private TextToSpeech textToSpeech;
 	private SpeechRecognizer speechRecognizer;
 
+	private ServiceManager serviceManager;
 	private OliviaService oliviaService;
 
+	private final Object speechSync = new Object();
 	private final Object voiceListeningSync = new Object();
 	private boolean voiceListeningStopped = true;
 
@@ -46,7 +47,10 @@ public class MainActivity extends AppCompatActivity {
 
 		initRecyclerView();
 
-		oliviaService = new OliviaService(this, oliviaResponseCallbackClient);
+		serviceManager = ServiceManager.getInstance();
+		serviceManager.setContext(this);
+		oliviaService = serviceManager.getOliviaService();
+		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
 	}
 
 	@Override
@@ -65,9 +69,13 @@ public class MainActivity extends AppCompatActivity {
 		clearSpeechRecognizer();
 	}
 
+// -------------------------------------------------------------------------------------------------
+// SPEECH & VOICE INIT & CLEANUP
+// -------------------------------------------------------------------------------------------------
+
 	private void initTextToSpeech() {
 
-		tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+		textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
 			@Override
 			public void onInit(int status) {
 
@@ -75,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
 
 					Log.d(Constants.TAG_TSS, "TTS GOOD - status code: " + status);
 
-					int result = tts.setLanguage(Locale.UK);
-					tts.setPitch(0.7F);
+					int result = textToSpeech.setLanguage(Locale.UK);
+					textToSpeech.setPitch(0.7F);
 
 					if (result == TextToSpeech.LANG_MISSING_DATA) {
 						Log.e(Constants.TAG_TSS, "LANG_MISSING_DATA");
@@ -98,10 +106,10 @@ public class MainActivity extends AppCompatActivity {
 
 	private void clearTextToSpeech() {
 
-		if (tts != null) {
-			tts.stop();
-			tts.shutdown();
-			tts = null;
+		if (textToSpeech != null) {
+			textToSpeech.stop();
+			textToSpeech.shutdown();
+			textToSpeech = null;
 		}
 	}
 
@@ -136,6 +144,14 @@ public class MainActivity extends AppCompatActivity {
 		recyclerView.setAdapter(googleResponseListAdapter);
 	}
 
+	private void enableSpeakButton() {
+		askButton.setEnabled(true);
+	}
+
+	private void disableSpeakButton() {
+		askButton.setEnabled(false);
+	}
+
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
 // -------------------------------------------------------------------------------------------------
@@ -159,13 +175,27 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	private void speakInitMessage() {
+
 		String text = getString(R.string.tts_init);
 		speak(text);
 	}
 
 	private void speak(String text) {
-		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-		answerView.setText(getString(R.string.answer) + " " + text);
+
+		synchronized (speechSync) {
+			textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+			answerView.setText(getString(R.string.answer) + " " + text);
+		}
+	}
+
+	private void stopSpeech() {
+
+		synchronized (speechSync) {
+			if (textToSpeech.isSpeaking()) {
+				textToSpeech.stop();
+				Log.d(Constants.TAG_TSS, "textToSpeech.stop()");
+			}
+		}
 	}
 
 // -------------------------------------------------------------------------------------------------
@@ -210,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
 			voiceListeningStopped = true;
 
 			speechRecognizer.stopListening();
-			askButton.setEnabled(true);
+			enableSpeakButton();
 			Log.d(Constants.TAG_TSS, "stopVoiceListening");
 		}
 	}
@@ -229,6 +259,9 @@ public class MainActivity extends AppCompatActivity {
 // -------------------------------------------------------------------------------------------------
 
 	public void buttonAsk(View v) {
+
+		stopSpeech();
+		ServiceManager.getInstance().getSongService().stopPlayingSong();
 
 		startVoiceListening();
 	}
@@ -268,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
 		@Override
 		public void onReadyForSpeech(Bundle params) {
 			Log.d("Speech", "onReadyForSpeech");
-			askButton.setEnabled(false);
+			disableSpeakButton();
 		}
 
 		@Override

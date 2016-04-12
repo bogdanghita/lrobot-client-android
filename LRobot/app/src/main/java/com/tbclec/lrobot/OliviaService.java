@@ -1,6 +1,5 @@
 package com.tbclec.lrobot;
 
-import android.content.Context;
 import android.util.Log;
 
 import java.util.List;
@@ -16,19 +15,19 @@ import retrofit.client.Response;
 public class OliviaService {
 
 	private OliviaResponseCallbackClient callbackClient;
-	private HttpService httpService;
-	private SongService songService;
+	private HttpAPI httpAPI;
 
-	public OliviaService(Context context, OliviaResponseCallbackClient callbackClient) {
-
-		this.callbackClient = callbackClient;
+	public OliviaService() {
 
 		RestAdapter retrofit = new RestAdapter.Builder()
 				.setEndpoint(Constants.SERVER_ADDRESS)
 				.build();
 
-		httpService = retrofit.create(HttpService.class);
-		songService = new SongService(context);
+		httpAPI = retrofit.create(HttpAPI.class);
+	}
+
+	public void setCallbackClient(OliviaResponseCallbackClient callbackClient) {
+		this.callbackClient = callbackClient;
 	}
 
 	public void askQuestion(List<String> question) {
@@ -40,7 +39,7 @@ public class OliviaService {
 			Log.d(Constants.TAG_OLIVIA, "Google question asked: " + response.content);
 		}
 		else if (response.requestType == QuestionParser.RequestType.REQ_SONG) {
-			songService.playSong(response.content);
+			ServiceManager.getInstance().getSongService().playSong(response.content);
 			Log.d(Constants.TAG_OLIVIA, "Play song asked: " + response.content);
 		}
 		else {
@@ -51,7 +50,7 @@ public class OliviaService {
 
 	private void askBasicQuestion(List<String> question) {
 
-		httpService.getBasicQuestion(question, new Callback<Message.BasicResponse>() {
+		httpAPI.getBasicQuestion(question, new Callback<Message.BasicResponse>() {
 			@Override
 			public void success(Message.BasicResponse basicResponse, Response response) {
 
@@ -75,7 +74,7 @@ public class OliviaService {
 		Message.GoogleQuestion message = new Message.GoogleQuestion();
 		message.query = question;
 
-		httpService.postGoogleQuestion(message, new Callback<List<Message.GoogleResponse>>() {
+		httpAPI.postGoogleQuestion(message, new Callback<List<Message.GoogleResponse>>() {
 
 			@Override
 			public void success(List<Message.GoogleResponse> googleResponses, Response response) {
