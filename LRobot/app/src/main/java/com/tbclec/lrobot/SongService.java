@@ -51,6 +51,8 @@ public class SongService {
 
 		Log.d(Constants.TAG_SONG, "Song not found.");
 		// TODO: start youtube
+		String youtubeLink = Constants.YOUTUBE_QUERY + song.get(0).replace(" ","+");
+		ServiceManager.getInstance().getExternalIntentService().openLink(youtubeLink);
 	}
 
 	private String searchSong(String song, String[] files) {
