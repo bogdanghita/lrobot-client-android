@@ -2,7 +2,11 @@ package com.tbclec.lrobot;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.CountDownTimer;
@@ -25,10 +29,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
 	private final Object speechSync = new Object();
 	private final Object voiceListeningSync = new Object();
 	private boolean voiceListeningStopped = true;
+
+	private enum MicState{ DISABLED,ON,RECORDING}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
 		setMicStatus(MicState.DISABLED);
 
-		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
-		Picasso.with(this)
-				.load("file:///android_asset/faces/intro.png")
-				.into(imageView);
+		setOliviaImage(getString(R.string.olivia_intro_image));
 	}
 
 	@Override
@@ -172,7 +179,6 @@ public class MainActivity extends AppCompatActivity {
 		askButton.setEnabled(false);
 	}
 
-	private enum MicState{ DISABLED,ON,RECORDING}
 	private void setMicStatus(MicState micState){
 		ImageView iv = (ImageView)findViewById(R.id.ask_button);
 		switch (micState){
@@ -188,9 +194,23 @@ public class MainActivity extends AppCompatActivity {
 				break;
 			default:
 				iv.setColorFilter(Color.BLACK);
-
 		}
 	}
+
+	private void setOliviaImage(String image){
+		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
+
+		if(image == null){
+			image = getString(R.string.olivia_default_image);
+		}
+
+		Picasso.with(this)
+				.load("file:///android_asset/faces/" + image)
+				.transform(new CropCircleTransformation())
+				.into(imageView);
+	}
+
+
 
 // -------------------------------------------------------------------------------------------------
 // ACTIVITY RESULT
@@ -361,11 +381,12 @@ public class MainActivity extends AppCompatActivity {
 
 	private OliviaResponseCallbackClient oliviaResponseCallbackClient = new OliviaResponseCallbackClient() {
 		@Override
-		public void notifyBasicAnswerReceived(final String answer) {
+		public void notifyBasicAnswerReceived(final String answer,final String image) {
 
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
+					setOliviaImage(image);
 					speak(answer);
 				}
 			});
@@ -373,7 +394,6 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public void notifyGoogleAnswerReceived(final List<Message.GoogleResponse> answer) {
-
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
