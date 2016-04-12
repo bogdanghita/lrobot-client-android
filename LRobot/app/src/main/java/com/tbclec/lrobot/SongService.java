@@ -17,13 +17,20 @@ public class SongService {
 	private MediaPlayer player;
 
 	public SongService() {
-
-		player = new MediaPlayer();
-		player.setVolume(1.0f, 1.0f);
+		initMediaPlayer();
 	}
 
 	public void setContext(Context context) {
 		this.context = context;
+	}
+
+	private void initMediaPlayer() {
+		player = new MediaPlayer();
+		player.setVolume(1.0f, 1.0f);
+	}
+
+	public void stopPlayingSong() {
+		player.stop();
 	}
 
 	public void playSong(List<String> song) {
@@ -51,7 +58,7 @@ public class SongService {
 
 		Log.d(Constants.TAG_SONG, "Song not found.");
 		// TODO: start youtube
-		String youtubeLink = Constants.YOUTUBE_QUERY + song.get(0).replace(" ","+");
+		String youtubeLink = Constants.YOUTUBE_QUERY + song.get(0).replace(" ", "+");
 		ServiceManager.getInstance().getExternalIntentService().openLink(youtubeLink);
 	}
 
@@ -92,8 +99,7 @@ public class SongService {
 	private void playSong(AssetFileDescriptor descriptor) {
 
 		stopPlayingSong();
-
-//		player = new MediaPlayer();
+		initMediaPlayer();
 
 		long start = descriptor.getStartOffset();
 		long end = descriptor.getLength();
@@ -109,9 +115,5 @@ public class SongService {
 		}
 
 		player.start();
-	}
-
-	public void stopPlayingSong() {
-		player.stop();
 	}
 }
