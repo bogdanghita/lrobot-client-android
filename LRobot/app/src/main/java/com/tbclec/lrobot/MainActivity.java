@@ -28,7 +28,6 @@ import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 public class MainActivity extends AppCompatActivity {
 
 	private TextView questionView, answerView;
-	private ImageView askButton;
 	private LinearLayout googleResultsLayout;
 
 	private GoogleResponseListAdapter googleResponseListAdapter;
@@ -57,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
 
 		questionView = (TextView) findViewById(R.id.question_view);
 		answerView = (TextView) findViewById(R.id.answer_view);
-		askButton = (ImageView) findViewById(R.id.ask_button);
 		googleResultsLayout = (LinearLayout) findViewById(R.id.google_results_layout);
 
 		ImageView imageView = (ImageView) findViewById(R.id.FaceImageView);
