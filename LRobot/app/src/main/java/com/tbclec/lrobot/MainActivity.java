@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
 		oliviaService.setCallbackClient(oliviaResponseCallbackClient);
 
 		setMicStatus(MicState.DISABLED);
-
 		setOliviaImage(getString(R.string.olivia_intro_image));
 	}
 
@@ -182,29 +181,24 @@ public class MainActivity extends AppCompatActivity {
 		recyclerView.setAdapter(googleResponseListAdapter);
 	}
 
-	private void enableSpeakButton() {
-		askButton.setEnabled(true);
-	}
-
-	private void disableSpeakButton() {
-		askButton.setEnabled(false);
-	}
-
 	private void setMicStatus(MicState micState) {
-		ImageView iv = (ImageView) findViewById(R.id.ask_button);
+		ImageView askButton = (ImageView) findViewById(R.id.ask_button);
 		switch (micState) {
 			case DISABLED:
-				iv.setColorFilter(Color.GRAY);
+				askButton.setColorFilter(Color.GRAY);
+				askButton.setEnabled(false);
 				break;
 			case ON:
-				iv.setColorFilter(Color.BLACK);
+				askButton.setColorFilter(Color.BLACK);
+				askButton.setEnabled(true);
 				break;
-
 			case RECORDING:
-				iv.setColorFilter(Color.RED);
+				askButton.setColorFilter(Color.RED);
+				askButton.setEnabled(false);
 				break;
 			default:
-				iv.setColorFilter(Color.BLACK);
+				askButton.setColorFilter(Color.BLACK);
+				askButton.setEnabled(true);
 		}
 	}
 
@@ -334,7 +328,6 @@ public class MainActivity extends AppCompatActivity {
 			voiceListeningStopped = true;
 
 			speechRecognizer.stopListening();
-			enableSpeakButton();
 			Log.d(Constants.TAG_TSS, "stopVoiceListening");
 			setMicStatus(MicState.ON);
 		}
@@ -396,7 +389,6 @@ public class MainActivity extends AppCompatActivity {
 		@Override
 		public void onReadyForSpeech(Bundle params) {
 			Log.d("Speech", "onReadyForSpeech");
-			disableSpeakButton();
 		}
 
 		@Override
