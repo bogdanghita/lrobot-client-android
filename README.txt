@@ -1,4 +1,4 @@
-Linux Embedded Challenge
+Linux Embedded Challenge 2016
 Team: TBC
 Project: LRobot
 
