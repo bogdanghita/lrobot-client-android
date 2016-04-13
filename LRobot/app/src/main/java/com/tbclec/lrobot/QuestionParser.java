@@ -26,8 +26,13 @@ public class QuestionParser {
 
 	private final static String[] googleQuestionPatterns = {
 			"google",
-			"ask google"};
+			"ask google",
+			"search google",
+			"search on google"};
 	private final static String[] playSongPatterns = {
+			"play song by",
+			"play a song by",
+			"play me a song by",
 			"play song",
 			"play a song",
 			"play me a song"};
